@@ -2388,7 +2388,7 @@
             },
             {
               "name": "screwSeat",
-              "ioValue": 6
+              "ioValue": 12
             }
           ],
           "interpreterVersion": 1,
@@ -2766,7 +2766,7 @@
           "x": 0.1,
           "y": 0.3,
           "uniqueID": "id-622",
-          "name": "M3 x 16 Socket Head Screw",
+          "name": "M3 x 20 Socket Head Screw",
           "topLevel": false,
           "allAtoms": [
             {
@@ -2833,7 +2833,7 @@
                 },
                 {
                   "name": "height",
-                  "ioValue": -16
+                  "ioValue": -20
                 }
               ]
             },
@@ -2939,8 +2939,8 @@
                 },
                 {
                   "name": "Item Name",
-                  "ioValue": "M3 x 16 mm socket head cap screw, stainless",
-                  "currentEquation": "M3 x 16 mm socket head cap screw, stainless"
+                  "ioValue": "M3 x 20 mm socket head cap screw, stainless",
+                  "currentEquation": "M3 x 20 mm socket head cap screw, stainless"
                 },
                 {
                   "name": "Number Needed",
@@ -2956,7 +2956,7 @@
                 }
               ],
               "BOMitem": {
-                "BOMitemName": "M3 x 16 mm socket head cap screw, stainless",
+                "BOMitemName": "M3 x 20 mm socket head cap screw, stainless",
                 "numberNeeded": 1,
                 "costUSD": 0,
                 "source": ""
@@ -3220,7 +3220,7 @@
             },
             {
               "name": "xDist",
-              "ioValue": -6
+              "ioValue": -12
             },
             {
               "name": "yDist",
@@ -3244,7 +3244,7 @@
             },
             {
               "name": "xDist",
-              "ioValue": -6
+              "ioValue": -12
             },
             {
               "name": "yDist",
@@ -3296,7 +3296,7 @@
             },
             {
               "name": "yDist",
-              "ioValue": -6
+              "ioValue": -12
             },
             {
               "name": "zDist",
@@ -3320,7 +3320,7 @@
             },
             {
               "name": "yDist",
-              "ioValue": -6
+              "ioValue": -12
             },
             {
               "name": "zDist",
