@@ -3387,6 +3387,59 @@
       "lastReloadedFromGithubAt": 1793670297255
     },
     {
+      "atomType": "ExtractTag",
+      "x": 0.8208,
+      "y": 0.6141,
+      "uniqueID": "id-1992",
+      "name": "Extract printed",
+      "ioValues": [
+        {
+          "name": "geometry",
+          "ioValue": "__GEOMETRY_INPUT__"
+        }
+      ],
+      "tagIndex": 0,
+      "selectedTags": [
+        "printed"
+      ],
+      "includeUntagged": false,
+      "notKeepOut": false
+    },
+    {
+      "atomType": "Export",
+      "x": 0.8843,
+      "y": 0.7746,
+      "uniqueID": "id-1995",
+      "ioValues": [
+        {
+          "name": "geometry",
+          "ioValue": "__GEOMETRY_INPUT__"
+        },
+        {
+          "name": "File Type",
+          "ioValue": "STEP",
+          "currentEquation": "STEP"
+        },
+        {
+          "name": "Resolution (dpi)",
+          "ioValue": 96
+        },
+        {
+          "name": "STL Tolerance",
+          "ioValue": 0.05
+        },
+        {
+          "name": "Part Name",
+          "ioValue": "Boat_corner",
+          "currentEquation": "Boat_corner"
+        }
+      ],
+      "type": null,
+      "resolution": 96,
+      "importIndex": 0,
+      "partName": "Boat_corner"
+    },
+    {
       "atomType": "Output",
       "x": 0.98,
       "y": 0.5,
@@ -3983,8 +4036,8 @@
             },
             {
               "atomType": "Extrude",
-              "x": 0.57,
-              "y": 0.5,
+              "x": 0.5344,
+              "y": 0.4901,
               "uniqueID": "id-1454",
               "ioValues": [
                 {
@@ -3999,8 +4052,8 @@
             },
             {
               "atomType": "Move",
-              "x": 0.7,
-              "y": 0.5,
+              "x": 0.6567,
+              "y": 0.493,
               "uniqueID": "id-1458",
               "ioValues": [
                 {
@@ -4036,6 +4089,19 @@
               "tags": [
                 "printed"
               ]
+            },
+            {
+              "atomType": "Color",
+              "x": 0.7427,
+              "y": 0.4676,
+              "uniqueID": "id-1989",
+              "ioValues": [
+                {
+                  "name": "geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                }
+              ],
+              "selectedColor": "Black"
             }
           ],
           "allConnectors": [
@@ -4072,12 +4138,17 @@
             {
               "ap2Name": "geometry",
               "ap1ID": "id-1458",
-              "ap2ID": "id-1464"
+              "ap2ID": "id-1989"
             },
             {
               "ap2Name": "number or geometry",
               "ap1ID": "id-1464",
               "ap2ID": "id-1359"
+            },
+            {
+              "ap2Name": "geometry",
+              "ap1ID": "id-1989",
+              "ap2ID": "id-1464"
             }
           ],
           "fileTypeVersion": 1
@@ -4980,6 +5051,21 @@
       "ap2ID": "id-604"
     },
     {
+      "ap2Name": "geometry",
+      "ap1ID": "id-1976",
+      "ap2ID": "id-1992"
+    },
+    {
+      "ap2Name": "number or geometry",
+      "ap1ID": "id-1976",
+      "ap2ID": "id-2"
+    },
+    {
+      "ap2Name": "geometry",
+      "ap1ID": "id-1992",
+      "ap2ID": "id-1995"
+    },
+    {
       "ap2Name": "Shape2",
       "ap1ID": "id-583",
       "ap2ID": "id-604"
@@ -4988,11 +5074,6 @@
       "ap2Name": "Geometry",
       "ap1ID": "id-604",
       "ap2ID": "id-1976"
-    },
-    {
-      "ap2Name": "number or geometry",
-      "ap1ID": "id-604",
-      "ap2ID": "id-2"
     }
   ],
   "unitsKey": "MM",
