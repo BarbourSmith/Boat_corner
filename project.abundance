@@ -137,16 +137,16 @@
               "uniqueID": "id-180",
               "ioValues": [
                 {
-                  "name": "thickness",
-                  "ioValue": 3.175
-                },
-                {
                   "name": "legX",
                   "ioValue": 38.1
                 },
                 {
                   "name": "legY",
                   "ioValue": 63.5
+                },
+                {
+                  "name": "thickness",
+                  "ioValue": 3.175
                 }
               ],
               "interpreterVersion": 1,
@@ -332,16 +332,16 @@
               "uniqueID": "id-219",
               "ioValues": [
                 {
-                  "name": "thickness",
-                  "ioValue": 3.175
-                },
-                {
                   "name": "legX",
                   "ioValue": 38.1
                 },
                 {
                   "name": "legY",
                   "ioValue": 63.5
+                },
+                {
+                  "name": "thickness",
+                  "ioValue": 3.175
                 }
               ],
               "interpreterVersion": 1,
@@ -493,16 +493,16 @@
               "uniqueID": "id-252",
               "ioValues": [
                 {
-                  "name": "thickness",
-                  "ioValue": 3.175
-                },
-                {
                   "name": "legX",
                   "ioValue": 50.8
                 },
                 {
                   "name": "legY",
                   "ioValue": 50.8
+                },
+                {
+                  "name": "thickness",
+                  "ioValue": 3.175
                 }
               ],
               "interpreterVersion": 1,
@@ -2431,8 +2431,8 @@
         },
         {
           "atomType": "GitHubMolecule",
-          "x": 0.5278,
-          "y": 0.2845,
+          "x": 0.5384,
+          "y": 0.2761,
           "uniqueID": "id-801",
           "name": "Cross-Section",
           "ioValues": [
@@ -2442,8 +2442,7 @@
             },
             {
               "name": "Angle X",
-              "ioValue": 0,
-              "currentEquation": "0"
+              "ioValue": 0
             },
             {
               "name": "Angle Z",
