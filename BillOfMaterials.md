@@ -5,6 +5,6 @@
 |1/2-13 x 1-1/2 in hex bolt, zinc|1|$0.00||
 |1/2-13 x 1 in hex bolt, zinc|1|$0.00||
 |1/2-13 hex nut, zinc|2|$0.00||
-|25mm M3 Bolt|4|$0.00||
-|New Item|4|$0.00||
-|Total: |12|$0.00| |
+|25mm M3 Bolt|3|$0.00||
+|New Item|3|$0.00||
+|Total: |10|$0.00| |
