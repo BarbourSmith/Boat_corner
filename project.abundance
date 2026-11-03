@@ -1,13 +1,100 @@
 {
-    "atomType": "Molecule",
-    "x": 0,
-    "y": 0,
-    "uniqueID": "id-1",
-    "name": "Boat_corner",
-    "topLevel": true,
-    "allAtoms": [],
-    "allConnectors": [],
-    "unitsKey": "MM",
-    "fileTypeVersion": 1,
-    "filetypeVersion": 1
+  "atomType": "Molecule",
+  "x": 0,
+  "y": 0,
+  "uniqueID": "id-1",
+  "name": "Boat_corner",
+  "topLevel": true,
+  "allAtoms": [
+    {
+      "atomType": "Molecule",
+      "x": 0.1845,
+      "y": 0.5915,
+      "uniqueID": "id-10",
+      "name": "Reference Images",
+      "topLevel": false,
+      "allAtoms": [
+        {
+          "atomType": "Output",
+          "x": 0.98,
+          "y": 0.5,
+          "uniqueID": "id-12",
+          "ioValues": [
+            {
+              "name": "number or geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            }
+          ]
+        },
+        {
+          "atomType": "Import",
+          "x": 0.2183,
+          "y": 0.2676,
+          "uniqueID": "id-14",
+          "fileName": "4FEEA7B2-86EE-4EE5-9E15-6780FA68DA1C.JPG",
+          "name": "Import",
+          "type": "JPG",
+          "SVGwidth": 10
+        },
+        {
+          "atomType": "Import",
+          "x": 0.2004,
+          "y": 0.5803,
+          "uniqueID": "id-16",
+          "fileName": "8C781A47-EB72-4CDC-82E5-54890C62D382.JPG",
+          "name": "Import",
+          "type": "JPG",
+          "SVGwidth": 10
+        },
+        {
+          "atomType": "Import",
+          "x": 0.3862,
+          "y": 0.7775,
+          "uniqueID": "id-18",
+          "fileName": "827411E5-F6EE-4054-8C89-939CAEBF5A49.JPG",
+          "name": "Import",
+          "type": "JPG",
+          "SVGwidth": 10
+        },
+        {
+          "atomType": "Import",
+          "x": 0.5284,
+          "y": 0.769,
+          "uniqueID": "id-20",
+          "fileName": "D36B8EDD-5743-4E2A-8314-EFDE988654A5.JPG",
+          "name": "Import",
+          "type": "JPG",
+          "SVGwidth": 10
+        },
+        {
+          "atomType": "Import",
+          "x": 0.6071,
+          "y": 0.6197,
+          "uniqueID": "id-22",
+          "fileName": "F9D32768-069D-499E-BE03-04D7F3FC9CC3.JPG",
+          "name": "Import",
+          "type": "JPG",
+          "SVGwidth": 10
+        }
+      ],
+      "allConnectors": [],
+      "fileTypeVersion": 1
+    },
+    {
+      "atomType": "Output",
+      "x": 0.98,
+      "y": 0.5,
+      "uniqueID": "id-2",
+      "ioValues": [
+        {
+          "name": "number or geometry",
+          "ioValue": "__GEOMETRY_INPUT__"
+        }
+      ]
+    }
+  ],
+  "allConnectors": [],
+  "unitsKey": "MM",
+  "fileTypeVersion": 1,
+  "filetypeVersion": 1
 }
