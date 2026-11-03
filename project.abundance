@@ -3446,8 +3446,8 @@
       "allAtoms": [
         {
           "atomType": "Molecule",
-          "x": 0.25,
-          "y": 0.2,
+          "x": 0.2831,
+          "y": 0.1887,
           "uniqueID": "id-1357",
           "name": "Fender Body",
           "topLevel": false,
@@ -4116,8 +4116,8 @@
         },
         {
           "atomType": "Molecule",
-          "x": 0.248,
-          "y": 0.4451,
+          "x": 0.2493,
+          "y": 0.6225,
           "uniqueID": "id-1467",
           "name": "Hardware Clearance",
           "topLevel": false,
@@ -4907,8 +4907,8 @@
         },
         {
           "atomType": "ExtractTag",
-          "x": 0.68,
-          "y": 0.45,
+          "x": 0.6138,
+          "y": 0.4648,
           "uniqueID": "id-1823",
           "name": "Extract printed",
           "ioValues": [
@@ -4938,8 +4938,8 @@
         },
         {
           "atomType": "Export",
-          "x": 0.5939,
-          "y": 0.7268,
+          "x": 0.7196,
+          "y": 0.6986,
           "uniqueID": "id-611",
           "ioValues": [
             {
