@@ -92,8 +92,8 @@
     },
     {
       "atomType": "Molecule",
-      "x": 0.5,
-      "y": 0.5,
+      "x": 0.4484,
+      "y": 0.3014,
       "uniqueID": "id-136",
       "name": "Corner Frame",
       "topLevel": false,
@@ -132,8 +132,8 @@
             },
             {
               "atomType": "Code",
-              "x": 0.15,
-              "y": 0.35,
+              "x": 0.1561,
+              "y": 0.3549,
               "uniqueID": "id-180",
               "ioValues": [
                 {
@@ -2338,8 +2338,8 @@
     },
     {
       "atomType": "Molecule",
-      "x": 0.5,
-      "y": 0.75,
+      "x": 0.4405,
+      "y": 0.5915,
       "uniqueID": "id-583",
       "name": "Corner Fender",
       "topLevel": false,
@@ -2358,8 +2358,8 @@
         },
         {
           "atomType": "Code",
-          "x": 0.4,
-          "y": 0.5,
+          "x": 0.4008,
+          "y": 0.507,
           "uniqueID": "id-587",
           "ioValues": [
             {
@@ -2375,14 +2375,6 @@
               "ioValue": 63.5
             },
             {
-              "name": "lipDepth",
-              "ioValue": 6
-            },
-            {
-              "name": "lipThickness",
-              "ioValue": 4
-            },
-            {
               "name": "boltClearance",
               "ioValue": 5
             },
@@ -2393,11 +2385,313 @@
             {
               "name": "approachSlot",
               "ioValue": 12
+            },
+            {
+              "name": "screwSeat",
+              "ioValue": 6
             }
           ],
           "interpreterVersion": 1,
-          "code": "/**\n * 3D printed corner fender for the boat frame corner.\n * Frame coordinates: origin at the outer top corner, side rail face at X=0 (frame at X>0),\n * end rail face at Y=0 (frame at Y>0), rail tops at Z=0.\n */\nfunction run(\n  legLength: number = 150, // mm along each face from the corner\n  wall: number = 20, // mm thickness outside the rail faces\n  railHeight: number = 63.5, // 2.5 in rail leg\n  lipDepth: number = 6, // mm the lip reaches in over the rail tops\n  lipThickness: number = 4, // mm\n  boltClearance: number = 5, // mm around the bolt heads' corners\n  braceClearance: number = 2, // mm around the end brace\n  approachSlot: number = 12, // mm the pockets stretch so the fender can be pushed on diagonally\n): Assembly {\n  const L = legLength, T = wall, H = railHeight;\n\n  // Axis-aligned box from min/max coordinates.\n  const box = (x0: number, x1: number, y0: number, y1: number, z0: number, z1: number) =>\n    replicad.drawRectangle(x1 - x0, y1 - y0).sketchOnPlane(\"XY\", z0).extrude(z1 - z0)\n      .translate((x0 + x1) / 2, (y0 + y1) / 2, 0);\n\n  // Rounded L outline wrapping the corner, with chamfered leg ends.\n  const c = 10, R = T + c; // outer arc centered 10 mm inside the corner\n  const m = c - R / Math.SQRT2;\n  const outline = replicad.draw([0, 0])\n    .lineTo([L, 0]).lineTo([L - 10, -T]).lineTo([c, -T])\n    .threePointsArcTo([-T, c], [m, m])\n    .lineTo([-T, L - 10]).lineTo([0, L]).close();\n  let body = outline.sketchOnPlane(\"XY\", -H).extrude(H + lipThickness);\n\n  // Lip over the tops of both rails.\n  body = body.fuse(box(0, lipDepth, 0, L, 0, lipThickness)).fuse(box(0, L, 0, lipDepth, 0, lipThickness));\n\n  const headR = 22 / 2; // 1/2 in hex head, 3/4 in across flats = 22 mm across corners\n\n  // Side bolt head: center Y 25.4, Z -25.4, head 7.94 mm proud of X=0.\n  const sY = 25.4, sZ = -25.4, rS = headR + boltClearance, sDepth = 7.94 + 3;\n  const sidePocket = replicad.makeCylinder(rS, sDepth + 0.5, [-sDepth, sY, sZ], [1, 0, 0])\n    .fuse(replicad.makeCylinder(rS, sDepth + 0.5, [-sDepth, sY + approachSlot, sZ], [1, 0, 0]))\n    .fuse(box(-sDepth, 0.5, sY, sY + approachSlot, sZ - rS, sZ + rS));\n\n  // End bolt head: center X 44.7, Z -47.6, head on the brace, 11.1 mm proud of Y=0.\n  // Runs out through the bottom so no thin sliver is left under it.\n  const eX = 44.7, eZ = -47.6, rE = headR + boltClearance, eDepth = 11.1 + 3.4;\n  const endPocket = replicad.makeCylinder(rE, eDepth + 0.5, [eX, -eDepth, eZ], [0, 1, 0])\n    .fuse(replicad.makeCylinder(rE, eDepth + 0.5, [eX + approachSlot, -eDepth, eZ], [0, 1, 0]))\n    .fuse(box(eX, eX + approachSlot, -eDepth, 0.5, eZ - rE, eZ + rE))\n    .fuse(box(eX - rE, eX + approachSlot + rE, -eDepth, 0.5, -H - 1, eZ));\n\n  // End brace: 1-1/4 x 1/8 flat bar on the end face (Y -3.175..0), end center (26.56, -42.67), sloping down 15.2 deg.\n  const bw = 31.75 + 2 * braceClearance, bt = 3.175 + 1.5;\n  const braceChannel = box(-5, L + 50, -bt, 0.5, -bw / 2, bw / 2)\n    .rotate(15.2, [0, 0, 0], [0, 1, 0])\n    .translate(26.56, 0, -42.67);\n\n  // Counterbored holes for #10 self-tapping screws into the rail legs, clear of the braces behind.\n  const hole = (p: number[], dir: number[]) => {\n    const start = [p[0] - dir[0] * (T + 0.5), p[1] - dir[1] * (T + 0.5), p[2]];\n    return replicad.makeCylinder(2.75, T + 1, start, dir)\n      .fuse(replicad.makeCylinder(5.5, T - 6 + 0.5, start, dir));\n  };\n  const screws = hole([0, 75, -12], [1, 0, 0])\n    .fuse(hole([0, 135, -12], [1, 0, 0]))\n    .fuse(hole([90, 0, -16], [0, 1, 0]))\n    .fuse(hole([135, 0, -16], [0, 1, 0]));\n\n  body = body.cut(sidePocket).cut(endPocket).cut(braceChannel).cut(screws);\n\n  return new Assembly({ geometry: body, color: \"#2f3437\", tags: [\"fender\", \"printed\"] });\n}\n",
-          "compiledCode": "\"use strict\";\n/**\n * 3D printed corner fender for the boat frame corner.\n * Frame coordinates: origin at the outer top corner, side rail face at X=0 (frame at X>0),\n * end rail face at Y=0 (frame at Y>0), rail tops at Z=0.\n */\nfunction run(legLength = 150, // mm along each face from the corner\nwall = 20, // mm thickness outside the rail faces\nrailHeight = 63.5, // 2.5 in rail leg\nlipDepth = 6, // mm the lip reaches in over the rail tops\nlipThickness = 4, // mm\nboltClearance = 5, // mm around the bolt heads' corners\nbraceClearance = 2, // mm around the end brace\napproachSlot = 12) {\n    const L = legLength, T = wall, H = railHeight;\n    // Axis-aligned box from min/max coordinates.\n    const box = (x0, x1, y0, y1, z0, z1) => replicad.drawRectangle(x1 - x0, y1 - y0).sketchOnPlane(\"XY\", z0).extrude(z1 - z0)\n        .translate((x0 + x1) / 2, (y0 + y1) / 2, 0);\n    // Rounded L outline wrapping the corner, with chamfered leg ends.\n    const c = 10, R = T + c; // outer arc centered 10 mm inside the corner\n    const m = c - R / Math.SQRT2;\n    const outline = replicad.draw([0, 0])\n        .lineTo([L, 0]).lineTo([L - 10, -T]).lineTo([c, -T])\n        .threePointsArcTo([-T, c], [m, m])\n        .lineTo([-T, L - 10]).lineTo([0, L]).close();\n    let body = outline.sketchOnPlane(\"XY\", -H).extrude(H + lipThickness);\n    // Lip over the tops of both rails.\n    body = body.fuse(box(0, lipDepth, 0, L, 0, lipThickness)).fuse(box(0, L, 0, lipDepth, 0, lipThickness));\n    const headR = 22 / 2; // 1/2 in hex head, 3/4 in across flats = 22 mm across corners\n    // Side bolt head: center Y 25.4, Z -25.4, head 7.94 mm proud of X=0.\n    const sY = 25.4, sZ = -25.4, rS = headR + boltClearance, sDepth = 7.94 + 3;\n    const sidePocket = replicad.makeCylinder(rS, sDepth + 0.5, [-sDepth, sY, sZ], [1, 0, 0])\n        .fuse(replicad.makeCylinder(rS, sDepth + 0.5, [-sDepth, sY + approachSlot, sZ], [1, 0, 0]))\n        .fuse(box(-sDepth, 0.5, sY, sY + approachSlot, sZ - rS, sZ + rS));\n    // End bolt head: center X 44.7, Z -47.6, head on the brace, 11.1 mm proud of Y=0.\n    // Runs out through the bottom so no thin sliver is left under it.\n    const eX = 44.7, eZ = -47.6, rE = headR + boltClearance, eDepth = 11.1 + 3.4;\n    const endPocket = replicad.makeCylinder(rE, eDepth + 0.5, [eX, -eDepth, eZ], [0, 1, 0])\n        .fuse(replicad.makeCylinder(rE, eDepth + 0.5, [eX + approachSlot, -eDepth, eZ], [0, 1, 0]))\n        .fuse(box(eX, eX + approachSlot, -eDepth, 0.5, eZ - rE, eZ + rE))\n        .fuse(box(eX - rE, eX + approachSlot + rE, -eDepth, 0.5, -H - 1, eZ));\n    // End brace: 1-1/4 x 1/8 flat bar on the end face (Y -3.175..0), end center (26.56, -42.67), sloping down 15.2 deg.\n    const bw = 31.75 + 2 * braceClearance, bt = 3.175 + 1.5;\n    const braceChannel = box(-5, L + 50, -bt, 0.5, -bw / 2, bw / 2)\n        .rotate(15.2, [0, 0, 0], [0, 1, 0])\n        .translate(26.56, 0, -42.67);\n    // Counterbored holes for #10 self-tapping screws into the rail legs, clear of the braces behind.\n    const hole = (p, dir) => {\n        const start = [p[0] - dir[0] * (T + 0.5), p[1] - dir[1] * (T + 0.5), p[2]];\n        return replicad.makeCylinder(2.75, T + 1, start, dir)\n            .fuse(replicad.makeCylinder(5.5, T - 6 + 0.5, start, dir));\n    };\n    const screws = hole([0, 75, -12], [1, 0, 0])\n        .fuse(hole([0, 135, -12], [1, 0, 0]))\n        .fuse(hole([90, 0, -16], [0, 1, 0]))\n        .fuse(hole([135, 0, -16], [0, 1, 0]));\n    body = body.cut(sidePocket).cut(endPocket).cut(braceChannel).cut(screws);\n    return new Assembly({ geometry: body, color: \"#2f3437\", tags: [\"fender\", \"printed\"] });\n}\n"
+          "code": "/**\n * 3D printed corner fender for the boat frame corner. It covers only the outside faces,\n * ending flush with the rail tops, so it also fits corners where the top is covered.\n * Frame coordinates: origin at the outer top corner, side rail face at X=0 (frame at X>0),\n * end rail face at Y=0 (frame at Y>0), rail tops at Z=0.\n */\nfunction run(\n  legLength: number = 150, // mm along each face from the corner\n  wall: number = 20, // mm thickness outside the rail faces\n  railHeight: number = 63.5, // 2.5 in rail leg\n  boltClearance: number = 5, // mm around the bolt heads' corners\n  braceClearance: number = 2, // mm around the end brace\n  approachSlot: number = 12, // mm the pockets stretch so the fender can be pushed on diagonally\n  screwSeat: number = 6, // mm of fender left under the M3 screw heads\n): Assembly {\n  const L = legLength, T = wall, H = railHeight;\n\n  // Axis-aligned box from min/max coordinates.\n  const box = (x0: number, x1: number, y0: number, y1: number, z0: number, z1: number) =>\n    replicad.drawRectangle(x1 - x0, y1 - y0).sketchOnPlane(\"XY\", z0).extrude(z1 - z0)\n      .translate((x0 + x1) / 2, (y0 + y1) / 2, 0);\n\n  // Rounded L outline wrapping the corner, with chamfered leg ends.\n  const c = 10, R = T + c; // outer arc centered 10 mm inside the corner\n  const m = c - R / Math.SQRT2;\n  const outline = replicad.draw([0, 0])\n    .lineTo([L, 0]).lineTo([L - 10, -T]).lineTo([c, -T])\n    .threePointsArcTo([-T, c], [m, m])\n    .lineTo([-T, L - 10]).lineTo([0, L]).close();\n  let body = outline.sketchOnPlane(\"XY\", -H).extrude(H);\n\n  const headR = 22 / 2; // 1/2 in hex head, 3/4 in across flats = 22 mm across corners\n\n  // Side bolt head: center Y 25.4, Z -25.4, head 7.94 mm proud of X=0.\n  const sY = 25.4, sZ = -25.4, rS = headR + boltClearance, sDepth = 7.94 + 3;\n  const sidePocket = replicad.makeCylinder(rS, sDepth + 0.5, [-sDepth, sY, sZ], [1, 0, 0])\n    .fuse(replicad.makeCylinder(rS, sDepth + 0.5, [-sDepth, sY + approachSlot, sZ], [1, 0, 0]))\n    .fuse(box(-sDepth, 0.5, sY, sY + approachSlot, sZ - rS, sZ + rS));\n\n  // End bolt head: center X 44.7, Z -47.6, head on the brace, 11.1 mm proud of Y=0.\n  // Runs out through the bottom so no thin sliver is left under it.\n  const eX = 44.7, eZ = -47.6, rE = headR + boltClearance, eDepth = 11.1 + 3.4;\n  const endPocket = replicad.makeCylinder(rE, eDepth + 0.5, [eX, -eDepth, eZ], [0, 1, 0])\n    .fuse(replicad.makeCylinder(rE, eDepth + 0.5, [eX + approachSlot, -eDepth, eZ], [0, 1, 0]))\n    .fuse(box(eX, eX + approachSlot, -eDepth, 0.5, eZ - rE, eZ + rE))\n    .fuse(box(eX - rE, eX + approachSlot + rE, -eDepth, 0.5, -H - 1, eZ));\n\n  // End brace: 1-1/4 x 1/8 flat bar on the end face (Y -3.175..0), end center (26.56, -42.67), sloping down 15.2 deg.\n  const bw = 31.75 + 2 * braceClearance, bt = 3.175 + 1.5;\n  const braceChannel = box(-5, L + 50, -bt, 0.5, -bw / 2, bw / 2)\n    .rotate(15.2, [0, 0, 0], [0, 1, 0])\n    .translate(26.56, 0, -42.67);\n\n  // Counterbored holes for M3 socket head screws through the rail legs, clear of the braces behind:\n  // 3.4 mm clearance hole, 6.5 mm counterbore for the 5.5 mm head.\n  const hole = (p: number[], dir: number[]) => {\n    const start = [p[0] - dir[0] * (T + 0.5), p[1] - dir[1] * (T + 0.5), p[2]];\n    return replicad.makeCylinder(1.7, T + 1, start, dir)\n      .fuse(replicad.makeCylinder(3.25, T - screwSeat + 0.5, start, dir));\n  };\n  const screws = hole([0, 75, -12], [1, 0, 0])\n    .fuse(hole([0, 135, -12], [1, 0, 0]))\n    .fuse(hole([90, 0, -16], [0, 1, 0]))\n    .fuse(hole([135, 0, -16], [0, 1, 0]));\n\n  body = body.cut(sidePocket).cut(endPocket).cut(braceChannel).cut(screws);\n\n  return new Assembly({ geometry: body, color: \"#2f3437\", tags: [\"fender\", \"printed\"] });\n}\n",
+          "compiledCode": "\"use strict\";\n/**\n * 3D printed corner fender for the boat frame corner. It covers only the outside faces,\n * ending flush with the rail tops, so it also fits corners where the top is covered.\n * Frame coordinates: origin at the outer top corner, side rail face at X=0 (frame at X>0),\n * end rail face at Y=0 (frame at Y>0), rail tops at Z=0.\n */\nfunction run(legLength = 150, // mm along each face from the corner\nwall = 20, // mm thickness outside the rail faces\nrailHeight = 63.5, // 2.5 in rail leg\nboltClearance = 5, // mm around the bolt heads' corners\nbraceClearance = 2, // mm around the end brace\napproachSlot = 12, // mm the pockets stretch so the fender can be pushed on diagonally\nscrewSeat = 6) {\n    const L = legLength, T = wall, H = railHeight;\n    // Axis-aligned box from min/max coordinates.\n    const box = (x0, x1, y0, y1, z0, z1) => replicad.drawRectangle(x1 - x0, y1 - y0).sketchOnPlane(\"XY\", z0).extrude(z1 - z0)\n        .translate((x0 + x1) / 2, (y0 + y1) / 2, 0);\n    // Rounded L outline wrapping the corner, with chamfered leg ends.\n    const c = 10, R = T + c; // outer arc centered 10 mm inside the corner\n    const m = c - R / Math.SQRT2;\n    const outline = replicad.draw([0, 0])\n        .lineTo([L, 0]).lineTo([L - 10, -T]).lineTo([c, -T])\n        .threePointsArcTo([-T, c], [m, m])\n        .lineTo([-T, L - 10]).lineTo([0, L]).close();\n    let body = outline.sketchOnPlane(\"XY\", -H).extrude(H);\n    const headR = 22 / 2; // 1/2 in hex head, 3/4 in across flats = 22 mm across corners\n    // Side bolt head: center Y 25.4, Z -25.4, head 7.94 mm proud of X=0.\n    const sY = 25.4, sZ = -25.4, rS = headR + boltClearance, sDepth = 7.94 + 3;\n    const sidePocket = replicad.makeCylinder(rS, sDepth + 0.5, [-sDepth, sY, sZ], [1, 0, 0])\n        .fuse(replicad.makeCylinder(rS, sDepth + 0.5, [-sDepth, sY + approachSlot, sZ], [1, 0, 0]))\n        .fuse(box(-sDepth, 0.5, sY, sY + approachSlot, sZ - rS, sZ + rS));\n    // End bolt head: center X 44.7, Z -47.6, head on the brace, 11.1 mm proud of Y=0.\n    // Runs out through the bottom so no thin sliver is left under it.\n    const eX = 44.7, eZ = -47.6, rE = headR + boltClearance, eDepth = 11.1 + 3.4;\n    const endPocket = replicad.makeCylinder(rE, eDepth + 0.5, [eX, -eDepth, eZ], [0, 1, 0])\n        .fuse(replicad.makeCylinder(rE, eDepth + 0.5, [eX + approachSlot, -eDepth, eZ], [0, 1, 0]))\n        .fuse(box(eX, eX + approachSlot, -eDepth, 0.5, eZ - rE, eZ + rE))\n        .fuse(box(eX - rE, eX + approachSlot + rE, -eDepth, 0.5, -H - 1, eZ));\n    // End brace: 1-1/4 x 1/8 flat bar on the end face (Y -3.175..0), end center (26.56, -42.67), sloping down 15.2 deg.\n    const bw = 31.75 + 2 * braceClearance, bt = 3.175 + 1.5;\n    const braceChannel = box(-5, L + 50, -bt, 0.5, -bw / 2, bw / 2)\n        .rotate(15.2, [0, 0, 0], [0, 1, 0])\n        .translate(26.56, 0, -42.67);\n    // Counterbored holes for M3 socket head screws through the rail legs, clear of the braces behind:\n    // 3.4 mm clearance hole, 6.5 mm counterbore for the 5.5 mm head.\n    const hole = (p, dir) => {\n        const start = [p[0] - dir[0] * (T + 0.5), p[1] - dir[1] * (T + 0.5), p[2]];\n        return replicad.makeCylinder(1.7, T + 1, start, dir)\n            .fuse(replicad.makeCylinder(3.25, T - screwSeat + 0.5, start, dir));\n    };\n    const screws = hole([0, 75, -12], [1, 0, 0])\n        .fuse(hole([0, 135, -12], [1, 0, 0]))\n        .fuse(hole([90, 0, -16], [0, 1, 0]))\n        .fuse(hole([135, 0, -16], [0, 1, 0]));\n    body = body.cut(sidePocket).cut(endPocket).cut(braceChannel).cut(screws);\n    return new Assembly({ geometry: body, color: \"#2f3437\", tags: [\"fender\", \"printed\"] });\n}\n"
+        },
+        {
+          "atomType": "Export",
+          "x": 0.5939,
+          "y": 0.7268,
+          "uniqueID": "id-611",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "File Type",
+              "ioValue": "STEP",
+              "currentEquation": "STEP"
+            },
+            {
+              "name": "Resolution (dpi)",
+              "ioValue": 96
+            },
+            {
+              "name": "STL Tolerance",
+              "ioValue": 0.05
+            },
+            {
+              "name": "Part Name",
+              "ioValue": "Corner Fender",
+              "currentEquation": "Corner Fender"
+            }
+          ],
+          "type": null,
+          "resolution": 96,
+          "importIndex": 0,
+          "partName": "Corner Fender"
+        },
+        {
+          "atomType": "GitHubMolecule",
+          "x": 0.5278,
+          "y": 0.2845,
+          "uniqueID": "id-801",
+          "name": "Cross-Section",
+          "ioValues": [
+            {
+              "name": "Offset",
+              "ioValue": -14
+            },
+            {
+              "name": "Angle X",
+              "ioValue": 0,
+              "currentEquation": "0"
+            },
+            {
+              "name": "Angle Z",
+              "ioValue": 0
+            },
+            {
+              "name": "Angle Y",
+              "ioValue": 0
+            }
+          ],
+          "topLevel": false,
+          "allAtoms": [
+            {
+              "atomType": "Output",
+              "x": 0.98,
+              "y": 0.5,
+              "uniqueID": "id-790",
+              "ioValues": [
+                {
+                  "name": "number or geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                }
+              ]
+            },
+            {
+              "atomType": "Input",
+              "x": 0.0254,
+              "y": 0.1538,
+              "uniqueID": "id-791",
+              "name": "Geometry",
+              "type": "number",
+              "options": []
+            },
+            {
+              "atomType": "Input",
+              "x": 0.0254,
+              "y": 0.2462,
+              "uniqueID": "id-792",
+              "name": "Offset",
+              "type": "number",
+              "options": []
+            },
+            {
+              "atomType": "Input",
+              "x": 0.0254,
+              "y": 0.3385,
+              "uniqueID": "id-793",
+              "name": "Angle X",
+              "type": "number",
+              "options": []
+            },
+            {
+              "atomType": "Input",
+              "x": 0.0254,
+              "y": 0.4308,
+              "uniqueID": "id-794",
+              "name": "Angle Z",
+              "type": "number",
+              "options": []
+            },
+            {
+              "atomType": "Input",
+              "x": 0.0254,
+              "y": 0.5231,
+              "uniqueID": "id-795",
+              "name": "Angle Y",
+              "type": "number",
+              "options": []
+            },
+            {
+              "atomType": "Rectangle",
+              "x": 0.1786,
+              "y": 0.3611,
+              "uniqueID": "id-796",
+              "ioValues": [
+                {
+                  "name": "x length",
+                  "ioValue": 40000
+                },
+                {
+                  "name": "y length",
+                  "ioValue": 40000
+                }
+              ]
+            },
+            {
+              "atomType": "Extrude",
+              "x": 0.2824,
+              "y": 0.4847,
+              "uniqueID": "id-797",
+              "ioValues": [
+                {
+                  "name": "geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "height",
+                  "ioValue": 4000
+                }
+              ]
+            },
+            {
+              "atomType": "Move",
+              "x": 0.3452,
+              "y": 0.6713,
+              "uniqueID": "id-798",
+              "ioValues": [
+                {
+                  "name": "geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "xDist",
+                  "ioValue": 0
+                },
+                {
+                  "name": "yDist",
+                  "ioValue": 0
+                },
+                {
+                  "name": "zDist",
+                  "ioValue": -14
+                }
+              ]
+            },
+            {
+              "atomType": "Rotate",
+              "x": 0.4094,
+              "y": 0.8301,
+              "uniqueID": "id-799",
+              "ioValues": [
+                {
+                  "name": "geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "x-axis degrees",
+                  "ioValue": 0
+                },
+                {
+                  "name": "y-axis degrees",
+                  "ioValue": 0
+                },
+                {
+                  "name": "z-axis degrees",
+                  "ioValue": 0
+                }
+              ]
+            },
+            {
+              "atomType": "Difference",
+              "x": 0.5238,
+              "y": 0.2423,
+              "uniqueID": "id-800",
+              "ioValues": [
+                {
+                  "name": "retain",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "remove",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                }
+              ]
+            }
+          ],
+          "allConnectors": [
+            {
+              "ap2Name": "retain",
+              "ap1ID": "id-791",
+              "ap2ID": "id-800"
+            },
+            {
+              "ap2Name": "zDist",
+              "ap1ID": "id-792",
+              "ap2ID": "id-798"
+            },
+            {
+              "ap2Name": "x-axis degrees",
+              "ap1ID": "id-793",
+              "ap2ID": "id-799"
+            },
+            {
+              "ap2Name": "z-axis degrees",
+              "ap1ID": "id-794",
+              "ap2ID": "id-799"
+            },
+            {
+              "ap2Name": "y-axis degrees",
+              "ap1ID": "id-795",
+              "ap2ID": "id-799"
+            },
+            {
+              "ap2Name": "geometry",
+              "ap1ID": "id-796",
+              "ap2ID": "id-797"
+            },
+            {
+              "ap2Name": "geometry",
+              "ap1ID": "id-797",
+              "ap2ID": "id-798"
+            },
+            {
+              "ap2Name": "geometry",
+              "ap1ID": "id-798",
+              "ap2ID": "id-799"
+            },
+            {
+              "ap2Name": "remove",
+              "ap1ID": "id-799",
+              "ap2ID": "id-800"
+            },
+            {
+              "ap2Name": "number or geometry",
+              "ap1ID": "id-800",
+              "ap2ID": "id-790"
+            }
+          ],
+          "parentRepo": {
+            "contentURL": "https://raw.githubusercontent.com/BarbourSmith/Cross-Section/master/project.abundance?sanitize=true",
+            "dateCreated": "2025-02-04T20:50:02Z",
+            "dateModified": "2026-01-23T18:20:41Z",
+            "description": "Takes a cross section of the input",
+            "forks": 0,
+            "githubMoleculesUsed": [],
+            "html_url": "https://github.com/BarbourSmith/Cross-Section",
+            "lastFoundGit": "2026-11-02T18:23:39.020Z",
+            "likes": 0,
+            "owner": "BarbourSmith",
+            "pngURL": "https://raw.githubusercontent.com/BarbourSmith/Cross-Section/master/project.png?sanitize=true",
+            "privateRepo": false,
+            "pullRequests": [],
+            "ranking": 3,
+            "readme": "https://raw.githubusercontent.com/BarbourSmith/Cross-Section/master/README.md?sanitize=true",
+            "searchField": "cross-section barboursmith takes a cross section of the input ",
+            "svgURL": "https://raw.githubusercontent.com/BarbourSmith/Cross-Section/master/project.svg?sanitize=true",
+            "topMoleculeID": "",
+            "topics": [],
+            "userRanking": 0,
+            "userSetAsThumbnail": false,
+            "yyyy": 2025,
+            "repoName": "Cross-Section",
+            "isLocal": false
+          },
+          "unitsKey": "MM",
+          "fileTypeVersion": 1,
+          "scaleToProjectUnits": true,
+          "lastReloadedFromGithubAt": 1793667325692
         }
       ],
       "allConnectors": [
@@ -2405,6 +2699,16 @@
           "ap2Name": "number or geometry",
           "ap1ID": "id-587",
           "ap2ID": "id-585"
+        },
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-587",
+          "ap2ID": "id-611"
+        },
+        {
+          "ap2Name": "Geometry",
+          "ap1ID": "id-587",
+          "ap2ID": "id-801"
         }
       ],
       "fileTypeVersion": 1
@@ -2430,8 +2734,901 @@
         {
           "name": "Shape3",
           "ioValue": "__GEOMETRY_INPUT__"
+        },
+        {
+          "name": "Shape4",
+          "ioValue": "__GEOMETRY_INPUT__"
         }
       ]
+    },
+    {
+      "atomType": "Molecule",
+      "x": 0.4272,
+      "y": 0.8507,
+      "uniqueID": "id-618",
+      "name": "Fender Hardware",
+      "topLevel": false,
+      "allAtoms": [
+        {
+          "atomType": "Output",
+          "x": 0.98,
+          "y": 0.5,
+          "uniqueID": "id-620",
+          "ioValues": [
+            {
+              "name": "number or geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            }
+          ]
+        },
+        {
+          "atomType": "Molecule",
+          "x": 0.1,
+          "y": 0.3,
+          "uniqueID": "id-622",
+          "name": "M3 x 16 Socket Head Screw",
+          "topLevel": false,
+          "allAtoms": [
+            {
+              "atomType": "Output",
+              "x": 0.98,
+              "y": 0.5,
+              "uniqueID": "id-624",
+              "ioValues": [
+                {
+                  "name": "number or geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                }
+              ]
+            },
+            {
+              "atomType": "Circle",
+              "x": 0.1,
+              "y": 0.2,
+              "uniqueID": "id-626",
+              "ioValues": [
+                {
+                  "name": "diameter",
+                  "ioValue": 5.5
+                }
+              ]
+            },
+            {
+              "atomType": "Extrude",
+              "x": 0.25,
+              "y": 0.2,
+              "uniqueID": "id-629",
+              "ioValues": [
+                {
+                  "name": "geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "height",
+                  "ioValue": 3
+                }
+              ]
+            },
+            {
+              "atomType": "Circle",
+              "x": 0.1,
+              "y": 0.5,
+              "uniqueID": "id-633",
+              "ioValues": [
+                {
+                  "name": "diameter",
+                  "ioValue": 3
+                }
+              ]
+            },
+            {
+              "atomType": "Extrude",
+              "x": 0.25,
+              "y": 0.5,
+              "uniqueID": "id-636",
+              "ioValues": [
+                {
+                  "name": "geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "height",
+                  "ioValue": -16
+                }
+              ]
+            },
+            {
+              "atomType": "Fusion",
+              "x": 0.45,
+              "y": 0.35,
+              "uniqueID": "id-640",
+              "ioValues": [
+                {
+                  "name": "Shape 1",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "Shape2",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                }
+              ],
+              "unionType": "Fusion"
+            },
+            {
+              "atomType": "RegularPolygon",
+              "x": 0.1,
+              "y": 0.8,
+              "uniqueID": "id-645",
+              "ioValues": [
+                {
+                  "name": "number of sides",
+                  "ioValue": 6
+                },
+                {
+                  "name": "diameter",
+                  "ioValue": 2.887
+                }
+              ]
+            },
+            {
+              "atomType": "Extrude",
+              "x": 0.25,
+              "y": 0.8,
+              "uniqueID": "id-649",
+              "ioValues": [
+                {
+                  "name": "geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "height",
+                  "ioValue": 2
+                }
+              ]
+            },
+            {
+              "atomType": "Move",
+              "x": 0.4,
+              "y": 0.8,
+              "uniqueID": "id-653",
+              "ioValues": [
+                {
+                  "name": "geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "xDist",
+                  "ioValue": 0
+                },
+                {
+                  "name": "yDist",
+                  "ioValue": 0
+                },
+                {
+                  "name": "zDist",
+                  "ioValue": 1.5
+                }
+              ]
+            },
+            {
+              "atomType": "Difference",
+              "x": 0.6,
+              "y": 0.5,
+              "uniqueID": "id-659",
+              "ioValues": [
+                {
+                  "name": "retain",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "remove",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                }
+              ]
+            },
+            {
+              "atomType": "Add-BOM-Tag",
+              "x": 0.8,
+              "y": 0.5,
+              "uniqueID": "id-663",
+              "name": "Add BOM Tag",
+              "ioValues": [
+                {
+                  "name": "geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "Item Name",
+                  "ioValue": "M3 x 16 mm socket head cap screw, stainless",
+                  "currentEquation": "M3 x 16 mm socket head cap screw, stainless"
+                },
+                {
+                  "name": "Number Needed",
+                  "ioValue": 1
+                },
+                {
+                  "name": "Cost (USD)",
+                  "ioValue": 0
+                },
+                {
+                  "name": "Source Link",
+                  "ioValue": ""
+                }
+              ],
+              "BOMitem": {
+                "BOMitemName": "M3 x 16 mm socket head cap screw, stainless",
+                "numberNeeded": 1,
+                "costUSD": 0,
+                "source": ""
+              }
+            }
+          ],
+          "allConnectors": [
+            {
+              "ap2Name": "geometry",
+              "ap1ID": "id-626",
+              "ap2ID": "id-629"
+            },
+            {
+              "ap2Name": "Shape 1",
+              "ap1ID": "id-629",
+              "ap2ID": "id-640"
+            },
+            {
+              "ap2Name": "geometry",
+              "ap1ID": "id-633",
+              "ap2ID": "id-636"
+            },
+            {
+              "ap2Name": "Shape2",
+              "ap1ID": "id-636",
+              "ap2ID": "id-640"
+            },
+            {
+              "ap2Name": "retain",
+              "ap1ID": "id-640",
+              "ap2ID": "id-659"
+            },
+            {
+              "ap2Name": "geometry",
+              "ap1ID": "id-645",
+              "ap2ID": "id-649"
+            },
+            {
+              "ap2Name": "geometry",
+              "ap1ID": "id-649",
+              "ap2ID": "id-653"
+            },
+            {
+              "ap2Name": "remove",
+              "ap1ID": "id-653",
+              "ap2ID": "id-659"
+            },
+            {
+              "ap2Name": "geometry",
+              "ap1ID": "id-659",
+              "ap2ID": "id-663"
+            },
+            {
+              "ap2Name": "number or geometry",
+              "ap1ID": "id-663",
+              "ap2ID": "id-624"
+            }
+          ],
+          "fileTypeVersion": 1
+        },
+        {
+          "atomType": "Molecule",
+          "x": 0.0959,
+          "y": 0.6704,
+          "uniqueID": "id-670",
+          "name": "M3 Hex Nut",
+          "topLevel": false,
+          "allAtoms": [
+            {
+              "atomType": "Output",
+              "x": 0.98,
+              "y": 0.5,
+              "uniqueID": "id-672",
+              "ioValues": [
+                {
+                  "name": "number or geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                }
+              ]
+            },
+            {
+              "atomType": "RegularPolygon",
+              "x": 0.1,
+              "y": 0.3,
+              "uniqueID": "id-674",
+              "ioValues": [
+                {
+                  "name": "number of sides",
+                  "ioValue": 6
+                },
+                {
+                  "name": "diameter",
+                  "ioValue": 6.35
+                }
+              ]
+            },
+            {
+              "atomType": "Extrude",
+              "x": 0.3,
+              "y": 0.3,
+              "uniqueID": "id-678",
+              "ioValues": [
+                {
+                  "name": "geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "height",
+                  "ioValue": 2.4
+                }
+              ]
+            },
+            {
+              "atomType": "Circle",
+              "x": 0.1,
+              "y": 0.7,
+              "uniqueID": "id-682",
+              "ioValues": [
+                {
+                  "name": "diameter",
+                  "ioValue": 3
+                }
+              ]
+            },
+            {
+              "atomType": "Extrude",
+              "x": 0.3,
+              "y": 0.7,
+              "uniqueID": "id-685",
+              "ioValues": [
+                {
+                  "name": "geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "height",
+                  "ioValue": 2.4
+                }
+              ]
+            },
+            {
+              "atomType": "Difference",
+              "x": 0.5,
+              "y": 0.5,
+              "uniqueID": "id-689",
+              "ioValues": [
+                {
+                  "name": "retain",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "remove",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                }
+              ]
+            },
+            {
+              "atomType": "Add-BOM-Tag",
+              "x": 0.75,
+              "y": 0.5,
+              "uniqueID": "id-693",
+              "name": "Add BOM Tag",
+              "ioValues": [
+                {
+                  "name": "geometry",
+                  "ioValue": "__GEOMETRY_INPUT__"
+                },
+                {
+                  "name": "Item Name",
+                  "ioValue": "M3 hex nut, stainless",
+                  "currentEquation": "M3 hex nut, stainless"
+                },
+                {
+                  "name": "Number Needed",
+                  "ioValue": 1
+                },
+                {
+                  "name": "Cost (USD)",
+                  "ioValue": 0
+                },
+                {
+                  "name": "Source Link",
+                  "ioValue": ""
+                }
+              ],
+              "BOMitem": {
+                "BOMitemName": "M3 hex nut, stainless",
+                "numberNeeded": 1,
+                "costUSD": 0,
+                "source": ""
+              }
+            }
+          ],
+          "allConnectors": [
+            {
+              "ap2Name": "geometry",
+              "ap1ID": "id-674",
+              "ap2ID": "id-678"
+            },
+            {
+              "ap2Name": "retain",
+              "ap1ID": "id-678",
+              "ap2ID": "id-689"
+            },
+            {
+              "ap2Name": "geometry",
+              "ap1ID": "id-682",
+              "ap2ID": "id-685"
+            },
+            {
+              "ap2Name": "remove",
+              "ap1ID": "id-685",
+              "ap2ID": "id-689"
+            },
+            {
+              "ap2Name": "geometry",
+              "ap1ID": "id-689",
+              "ap2ID": "id-693"
+            },
+            {
+              "ap2Name": "number or geometry",
+              "ap1ID": "id-693",
+              "ap2ID": "id-672"
+            }
+          ],
+          "fileTypeVersion": 1
+        },
+        {
+          "atomType": "Rotate",
+          "x": 0.3,
+          "y": 0.15,
+          "uniqueID": "id-700",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "x-axis degrees",
+              "ioValue": 0
+            },
+            {
+              "name": "y-axis degrees",
+              "ioValue": -90
+            },
+            {
+              "name": "z-axis degrees",
+              "ioValue": 0
+            }
+          ]
+        },
+        {
+          "atomType": "Move",
+          "x": 0.5,
+          "y": 0.08,
+          "uniqueID": "id-706",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "xDist",
+              "ioValue": -6
+            },
+            {
+              "name": "yDist",
+              "ioValue": 75
+            },
+            {
+              "name": "zDist",
+              "ioValue": -12
+            }
+          ]
+        },
+        {
+          "atomType": "Move",
+          "x": 0.5,
+          "y": 0.2,
+          "uniqueID": "id-712",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "xDist",
+              "ioValue": -6
+            },
+            {
+              "name": "yDist",
+              "ioValue": 135
+            },
+            {
+              "name": "zDist",
+              "ioValue": -12
+            }
+          ]
+        },
+        {
+          "atomType": "Rotate",
+          "x": 0.3,
+          "y": 0.4,
+          "uniqueID": "id-718",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "x-axis degrees",
+              "ioValue": 90
+            },
+            {
+              "name": "y-axis degrees",
+              "ioValue": 0
+            },
+            {
+              "name": "z-axis degrees",
+              "ioValue": 0
+            }
+          ]
+        },
+        {
+          "atomType": "Move",
+          "x": 0.5,
+          "y": 0.33,
+          "uniqueID": "id-724",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "xDist",
+              "ioValue": 90
+            },
+            {
+              "name": "yDist",
+              "ioValue": -6
+            },
+            {
+              "name": "zDist",
+              "ioValue": -16
+            }
+          ]
+        },
+        {
+          "atomType": "Move",
+          "x": 0.5,
+          "y": 0.45,
+          "uniqueID": "id-730",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "xDist",
+              "ioValue": 135
+            },
+            {
+              "name": "yDist",
+              "ioValue": -6
+            },
+            {
+              "name": "zDist",
+              "ioValue": -16
+            }
+          ]
+        },
+        {
+          "atomType": "Rotate",
+          "x": 0.3,
+          "y": 0.65,
+          "uniqueID": "id-736",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "x-axis degrees",
+              "ioValue": 0
+            },
+            {
+              "name": "y-axis degrees",
+              "ioValue": 90
+            },
+            {
+              "name": "z-axis degrees",
+              "ioValue": 0
+            }
+          ]
+        },
+        {
+          "atomType": "Move",
+          "x": 0.5,
+          "y": 0.58,
+          "uniqueID": "id-742",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "xDist",
+              "ioValue": 3.175
+            },
+            {
+              "name": "yDist",
+              "ioValue": 75
+            },
+            {
+              "name": "zDist",
+              "ioValue": -12
+            }
+          ]
+        },
+        {
+          "atomType": "Move",
+          "x": 0.5,
+          "y": 0.7,
+          "uniqueID": "id-748",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "xDist",
+              "ioValue": 3.175
+            },
+            {
+              "name": "yDist",
+              "ioValue": 135
+            },
+            {
+              "name": "zDist",
+              "ioValue": -12
+            }
+          ]
+        },
+        {
+          "atomType": "Rotate",
+          "x": 0.3,
+          "y": 0.9,
+          "uniqueID": "id-754",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "x-axis degrees",
+              "ioValue": -90
+            },
+            {
+              "name": "y-axis degrees",
+              "ioValue": 0
+            },
+            {
+              "name": "z-axis degrees",
+              "ioValue": 0
+            }
+          ]
+        },
+        {
+          "atomType": "Move",
+          "x": 0.5,
+          "y": 0.83,
+          "uniqueID": "id-760",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "xDist",
+              "ioValue": 90
+            },
+            {
+              "name": "yDist",
+              "ioValue": 3.175
+            },
+            {
+              "name": "zDist",
+              "ioValue": -16
+            }
+          ]
+        },
+        {
+          "atomType": "Move",
+          "x": 0.5,
+          "y": 0.95,
+          "uniqueID": "id-766",
+          "ioValues": [
+            {
+              "name": "geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "xDist",
+              "ioValue": 135
+            },
+            {
+              "name": "yDist",
+              "ioValue": 3.175
+            },
+            {
+              "name": "zDist",
+              "ioValue": -16
+            }
+          ]
+        },
+        {
+          "atomType": "Assembly",
+          "x": 0.75,
+          "y": 0.5,
+          "uniqueID": "id-772",
+          "ioValues": [
+            {
+              "name": "makeDisjoint",
+              "ioValue": false
+            },
+            {
+              "name": "Shape 1",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "Shape2",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "Shape3",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "Shape4",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "Shape5",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "Shape6",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "Shape7",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "Shape8",
+              "ioValue": "__GEOMETRY_INPUT__"
+            },
+            {
+              "name": "Shape9",
+              "ioValue": "__GEOMETRY_INPUT__"
+            }
+          ]
+        }
+      ],
+      "allConnectors": [
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-622",
+          "ap2ID": "id-700"
+        },
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-622",
+          "ap2ID": "id-718"
+        },
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-670",
+          "ap2ID": "id-736"
+        },
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-670",
+          "ap2ID": "id-754"
+        },
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-700",
+          "ap2ID": "id-706"
+        },
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-700",
+          "ap2ID": "id-712"
+        },
+        {
+          "ap2Name": "Shape 1",
+          "ap1ID": "id-706",
+          "ap2ID": "id-772"
+        },
+        {
+          "ap2Name": "Shape2",
+          "ap1ID": "id-712",
+          "ap2ID": "id-772"
+        },
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-718",
+          "ap2ID": "id-724"
+        },
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-718",
+          "ap2ID": "id-730"
+        },
+        {
+          "ap2Name": "Shape3",
+          "ap1ID": "id-724",
+          "ap2ID": "id-772"
+        },
+        {
+          "ap2Name": "Shape4",
+          "ap1ID": "id-730",
+          "ap2ID": "id-772"
+        },
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-736",
+          "ap2ID": "id-742"
+        },
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-736",
+          "ap2ID": "id-748"
+        },
+        {
+          "ap2Name": "Shape5",
+          "ap1ID": "id-742",
+          "ap2ID": "id-772"
+        },
+        {
+          "ap2Name": "Shape6",
+          "ap1ID": "id-748",
+          "ap2ID": "id-772"
+        },
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-754",
+          "ap2ID": "id-760"
+        },
+        {
+          "ap2Name": "geometry",
+          "ap1ID": "id-754",
+          "ap2ID": "id-766"
+        },
+        {
+          "ap2Name": "Shape7",
+          "ap1ID": "id-760",
+          "ap2ID": "id-772"
+        },
+        {
+          "ap2Name": "Shape8",
+          "ap1ID": "id-766",
+          "ap2ID": "id-772"
+        },
+        {
+          "ap2Name": "number or geometry",
+          "ap1ID": "id-772",
+          "ap2ID": "id-620"
+        }
+      ],
+      "fileTypeVersion": 1
     }
   ],
   "allConnectors": [
@@ -2449,6 +3646,11 @@
       "ap2Name": "number or geometry",
       "ap1ID": "id-604",
       "ap2ID": "id-2"
+    },
+    {
+      "ap2Name": "Shape3",
+      "ap1ID": "id-618",
+      "ap2ID": "id-604"
     }
   ],
   "unitsKey": "MM",

@@ -5,4 +5,6 @@
 |1/2-13 x 1-1/2 in hex bolt, zinc|1|$0.00||
 |1/2-13 x 1 in hex bolt, zinc|1|$0.00||
 |1/2-13 hex nut, zinc|2|$0.00||
-|Total: |4|$0.00| |
+|M3 x 16 mm socket head cap screw, stainless|4|$0.00||
+|M3 hex nut, stainless|4|$0.00||
+|Total: |12|$0.00| |
