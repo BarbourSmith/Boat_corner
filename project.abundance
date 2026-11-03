@@ -2335,12 +2335,119 @@
           "ioValue": "__GEOMETRY_INPUT__"
         }
       ]
+    },
+    {
+      "atomType": "Molecule",
+      "x": 0.5,
+      "y": 0.75,
+      "uniqueID": "id-583",
+      "name": "Corner Fender",
+      "topLevel": false,
+      "allAtoms": [
+        {
+          "atomType": "Output",
+          "x": 0.98,
+          "y": 0.5,
+          "uniqueID": "id-585",
+          "ioValues": [
+            {
+              "name": "number or geometry",
+              "ioValue": "__GEOMETRY_INPUT__"
+            }
+          ]
+        },
+        {
+          "atomType": "Code",
+          "x": 0.4,
+          "y": 0.5,
+          "uniqueID": "id-587",
+          "ioValues": [
+            {
+              "name": "legLength",
+              "ioValue": 150
+            },
+            {
+              "name": "wall",
+              "ioValue": 20
+            },
+            {
+              "name": "railHeight",
+              "ioValue": 63.5
+            },
+            {
+              "name": "lipDepth",
+              "ioValue": 6
+            },
+            {
+              "name": "lipThickness",
+              "ioValue": 4
+            },
+            {
+              "name": "boltClearance",
+              "ioValue": 5
+            },
+            {
+              "name": "braceClearance",
+              "ioValue": 2
+            },
+            {
+              "name": "approachSlot",
+              "ioValue": 12
+            }
+          ],
+          "interpreterVersion": 1,
+          "code": "/**\n * 3D printed corner fender for the boat frame corner.\n * Frame coordinates: origin at the outer top corner, side rail face at X=0 (frame at X>0),\n * end rail face at Y=0 (frame at Y>0), rail tops at Z=0.\n */\nfunction run(\n  legLength: number = 150, // mm along each face from the corner\n  wall: number = 20, // mm thickness outside the rail faces\n  railHeight: number = 63.5, // 2.5 in rail leg\n  lipDepth: number = 6, // mm the lip reaches in over the rail tops\n  lipThickness: number = 4, // mm\n  boltClearance: number = 5, // mm around the bolt heads' corners\n  braceClearance: number = 2, // mm around the end brace\n  approachSlot: number = 12, // mm the pockets stretch so the fender can be pushed on diagonally\n): Assembly {\n  const L = legLength, T = wall, H = railHeight;\n\n  // Axis-aligned box from min/max coordinates.\n  const box = (x0: number, x1: number, y0: number, y1: number, z0: number, z1: number) =>\n    replicad.drawRectangle(x1 - x0, y1 - y0).sketchOnPlane(\"XY\", z0).extrude(z1 - z0)\n      .translate((x0 + x1) / 2, (y0 + y1) / 2, 0);\n\n  // Rounded L outline wrapping the corner, with chamfered leg ends.\n  const c = 10, R = T + c; // outer arc centered 10 mm inside the corner\n  const m = c - R / Math.SQRT2;\n  const outline = replicad.draw([0, 0])\n    .lineTo([L, 0]).lineTo([L - 10, -T]).lineTo([c, -T])\n    .threePointsArcTo([-T, c], [m, m])\n    .lineTo([-T, L - 10]).lineTo([0, L]).close();\n  let body = outline.sketchOnPlane(\"XY\", -H).extrude(H + lipThickness);\n\n  // Lip over the tops of both rails.\n  body = body.fuse(box(0, lipDepth, 0, L, 0, lipThickness)).fuse(box(0, L, 0, lipDepth, 0, lipThickness));\n\n  const headR = 22 / 2; // 1/2 in hex head, 3/4 in across flats = 22 mm across corners\n\n  // Side bolt head: center Y 25.4, Z -25.4, head 7.94 mm proud of X=0.\n  const sY = 25.4, sZ = -25.4, rS = headR + boltClearance, sDepth = 7.94 + 3;\n  const sidePocket = replicad.makeCylinder(rS, sDepth + 0.5, [-sDepth, sY, sZ], [1, 0, 0])\n    .fuse(replicad.makeCylinder(rS, sDepth + 0.5, [-sDepth, sY + approachSlot, sZ], [1, 0, 0]))\n    .fuse(box(-sDepth, 0.5, sY, sY + approachSlot, sZ - rS, sZ + rS));\n\n  // End bolt head: center X 44.7, Z -47.6, head on the brace, 11.1 mm proud of Y=0.\n  // Runs out through the bottom so no thin sliver is left under it.\n  const eX = 44.7, eZ = -47.6, rE = headR + boltClearance, eDepth = 11.1 + 3.4;\n  const endPocket = replicad.makeCylinder(rE, eDepth + 0.5, [eX, -eDepth, eZ], [0, 1, 0])\n    .fuse(replicad.makeCylinder(rE, eDepth + 0.5, [eX + approachSlot, -eDepth, eZ], [0, 1, 0]))\n    .fuse(box(eX, eX + approachSlot, -eDepth, 0.5, eZ - rE, eZ + rE))\n    .fuse(box(eX - rE, eX + approachSlot + rE, -eDepth, 0.5, -H - 1, eZ));\n\n  // End brace: 1-1/4 x 1/8 flat bar on the end face (Y -3.175..0), end center (26.56, -42.67), sloping down 15.2 deg.\n  const bw = 31.75 + 2 * braceClearance, bt = 3.175 + 1.5;\n  const braceChannel = box(-5, L + 50, -bt, 0.5, -bw / 2, bw / 2)\n    .rotate(15.2, [0, 0, 0], [0, 1, 0])\n    .translate(26.56, 0, -42.67);\n\n  // Counterbored holes for #10 self-tapping screws into the rail legs, clear of the braces behind.\n  const hole = (p: number[], dir: number[]) => {\n    const start = [p[0] - dir[0] * (T + 0.5), p[1] - dir[1] * (T + 0.5), p[2]];\n    return replicad.makeCylinder(2.75, T + 1, start, dir)\n      .fuse(replicad.makeCylinder(5.5, T - 6 + 0.5, start, dir));\n  };\n  const screws = hole([0, 75, -12], [1, 0, 0])\n    .fuse(hole([0, 135, -12], [1, 0, 0]))\n    .fuse(hole([90, 0, -16], [0, 1, 0]))\n    .fuse(hole([135, 0, -16], [0, 1, 0]));\n\n  body = body.cut(sidePocket).cut(endPocket).cut(braceChannel).cut(screws);\n\n  return new Assembly({ geometry: body, color: \"#2f3437\", tags: [\"fender\", \"printed\"] });\n}\n",
+          "compiledCode": "\"use strict\";\n/**\n * 3D printed corner fender for the boat frame corner.\n * Frame coordinates: origin at the outer top corner, side rail face at X=0 (frame at X>0),\n * end rail face at Y=0 (frame at Y>0), rail tops at Z=0.\n */\nfunction run(legLength = 150, // mm along each face from the corner\nwall = 20, // mm thickness outside the rail faces\nrailHeight = 63.5, // 2.5 in rail leg\nlipDepth = 6, // mm the lip reaches in over the rail tops\nlipThickness = 4, // mm\nboltClearance = 5, // mm around the bolt heads' corners\nbraceClearance = 2, // mm around the end brace\napproachSlot = 12) {\n    const L = legLength, T = wall, H = railHeight;\n    // Axis-aligned box from min/max coordinates.\n    const box = (x0, x1, y0, y1, z0, z1) => replicad.drawRectangle(x1 - x0, y1 - y0).sketchOnPlane(\"XY\", z0).extrude(z1 - z0)\n        .translate((x0 + x1) / 2, (y0 + y1) / 2, 0);\n    // Rounded L outline wrapping the corner, with chamfered leg ends.\n    const c = 10, R = T + c; // outer arc centered 10 mm inside the corner\n    const m = c - R / Math.SQRT2;\n    const outline = replicad.draw([0, 0])\n        .lineTo([L, 0]).lineTo([L - 10, -T]).lineTo([c, -T])\n        .threePointsArcTo([-T, c], [m, m])\n        .lineTo([-T, L - 10]).lineTo([0, L]).close();\n    let body = outline.sketchOnPlane(\"XY\", -H).extrude(H + lipThickness);\n    // Lip over the tops of both rails.\n    body = body.fuse(box(0, lipDepth, 0, L, 0, lipThickness)).fuse(box(0, L, 0, lipDepth, 0, lipThickness));\n    const headR = 22 / 2; // 1/2 in hex head, 3/4 in across flats = 22 mm across corners\n    // Side bolt head: center Y 25.4, Z -25.4, head 7.94 mm proud of X=0.\n    const sY = 25.4, sZ = -25.4, rS = headR + boltClearance, sDepth = 7.94 + 3;\n    const sidePocket = replicad.makeCylinder(rS, sDepth + 0.5, [-sDepth, sY, sZ], [1, 0, 0])\n        .fuse(replicad.makeCylinder(rS, sDepth + 0.5, [-sDepth, sY + approachSlot, sZ], [1, 0, 0]))\n        .fuse(box(-sDepth, 0.5, sY, sY + approachSlot, sZ - rS, sZ + rS));\n    // End bolt head: center X 44.7, Z -47.6, head on the brace, 11.1 mm proud of Y=0.\n    // Runs out through the bottom so no thin sliver is left under it.\n    const eX = 44.7, eZ = -47.6, rE = headR + boltClearance, eDepth = 11.1 + 3.4;\n    const endPocket = replicad.makeCylinder(rE, eDepth + 0.5, [eX, -eDepth, eZ], [0, 1, 0])\n        .fuse(replicad.makeCylinder(rE, eDepth + 0.5, [eX + approachSlot, -eDepth, eZ], [0, 1, 0]))\n        .fuse(box(eX, eX + approachSlot, -eDepth, 0.5, eZ - rE, eZ + rE))\n        .fuse(box(eX - rE, eX + approachSlot + rE, -eDepth, 0.5, -H - 1, eZ));\n    // End brace: 1-1/4 x 1/8 flat bar on the end face (Y -3.175..0), end center (26.56, -42.67), sloping down 15.2 deg.\n    const bw = 31.75 + 2 * braceClearance, bt = 3.175 + 1.5;\n    const braceChannel = box(-5, L + 50, -bt, 0.5, -bw / 2, bw / 2)\n        .rotate(15.2, [0, 0, 0], [0, 1, 0])\n        .translate(26.56, 0, -42.67);\n    // Counterbored holes for #10 self-tapping screws into the rail legs, clear of the braces behind.\n    const hole = (p, dir) => {\n        const start = [p[0] - dir[0] * (T + 0.5), p[1] - dir[1] * (T + 0.5), p[2]];\n        return replicad.makeCylinder(2.75, T + 1, start, dir)\n            .fuse(replicad.makeCylinder(5.5, T - 6 + 0.5, start, dir));\n    };\n    const screws = hole([0, 75, -12], [1, 0, 0])\n        .fuse(hole([0, 135, -12], [1, 0, 0]))\n        .fuse(hole([90, 0, -16], [0, 1, 0]))\n        .fuse(hole([135, 0, -16], [0, 1, 0]));\n    body = body.cut(sidePocket).cut(endPocket).cut(braceChannel).cut(screws);\n    return new Assembly({ geometry: body, color: \"#2f3437\", tags: [\"fender\", \"printed\"] });\n}\n"
+        }
+      ],
+      "allConnectors": [
+        {
+          "ap2Name": "number or geometry",
+          "ap1ID": "id-587",
+          "ap2ID": "id-585"
+        }
+      ],
+      "fileTypeVersion": 1
+    },
+    {
+      "atomType": "Assembly",
+      "x": 0.7,
+      "y": 0.6,
+      "uniqueID": "id-604",
+      "ioValues": [
+        {
+          "name": "makeDisjoint",
+          "ioValue": false
+        },
+        {
+          "name": "Shape 1",
+          "ioValue": "__GEOMETRY_INPUT__"
+        },
+        {
+          "name": "Shape2",
+          "ioValue": "__GEOMETRY_INPUT__"
+        },
+        {
+          "name": "Shape3",
+          "ioValue": "__GEOMETRY_INPUT__"
+        }
+      ]
     }
   ],
   "allConnectors": [
     {
-      "ap2Name": "number or geometry",
+      "ap2Name": "Shape 1",
       "ap1ID": "id-136",
+      "ap2ID": "id-604"
+    },
+    {
+      "ap2Name": "Shape2",
+      "ap1ID": "id-583",
+      "ap2ID": "id-604"
+    },
+    {
+      "ap2Name": "number or geometry",
+      "ap1ID": "id-604",
       "ap2ID": "id-2"
     }
   ],
