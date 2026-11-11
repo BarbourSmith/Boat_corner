@@ -8,8 +8,8 @@
   "allAtoms": [
     {
       "atomType": "Molecule",
-      "x": 0.1905,
-      "y": 0.6,
+      "x": 0.4266,
+      "y": 0.8535,
       "uniqueID": "id-10",
       "name": "Reference Images",
       "topLevel": false,
@@ -5389,11 +5389,20 @@
         {
           "name": "Shape4",
           "ioValue": "__GEOMETRY_INPUT__"
+        },
+        {
+          "name": "Shape5",
+          "ioValue": "__GEOMETRY_INPUT__"
         }
       ]
     }
   ],
   "allConnectors": [
+    {
+      "ap2Name": "Shape4",
+      "ap1ID": "id-10",
+      "ap2ID": "id-604"
+    },
     {
       "ap2Name": "Shape 1",
       "ap1ID": "id-136",
